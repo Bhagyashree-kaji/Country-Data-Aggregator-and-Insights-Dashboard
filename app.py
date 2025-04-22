@@ -1,4 +1,5 @@
 import os
+import urllib.parse
 import logging
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
@@ -19,8 +20,24 @@ app = Flask(__name__)
 app.secret_key = os.environ.get("SESSION_SECRET", "country_data_aggregator_secret")
 app.wsgi_app = ProxyFix(app.wsgi_app, x_proto=1, x_host=1)
 
-# Configure the database
-app.config["SQLALCHEMY_DATABASE_URI"] = os.environ.get("DATABASE_URL", "sqlite:///country_data.db")
+# Configure the database with proper URL encoding for special characters
+if os.environ.get("DATABASE_URL"):
+    # Use environment variables directly for more control
+    password = os.environ.get("PGPASSWORD", "")
+    user = os.environ.get("PGUSER", "postgres")
+    host = os.environ.get("PGHOST", "localhost")
+    database = os.environ.get("PGDATABASE", "countrydata")
+    port = os.environ.get("PGPORT", "5432")
+    
+    # Construct the URL with proper encoding for special characters
+    db_url = f"postgresql://{user}:{urllib.parse.quote_plus(password)}@{host}:{port}/{database}"
+    logger.info(f"Connecting to database at {host}:{port}/{database}")
+else:
+    # Fallback to SQLite for development if no DATABASE_URL
+    db_url = "sqlite:///country_data.db"
+    logger.info("Using SQLite database")
+
+app.config["SQLALCHEMY_DATABASE_URI"] = db_url
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config["SQLALCHEMY_ENGINE_OPTIONS"] = {
     "pool_recycle": 300,
