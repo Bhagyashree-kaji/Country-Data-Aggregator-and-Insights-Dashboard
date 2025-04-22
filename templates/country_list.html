@@ -119,7 +119,9 @@
                                 {% for country in countries %}
                                 <tr>
                                     <td>
-                                        {% if country.flag_emoji %}
+                                        {% if country.flag_url %}
+                                            <img src="{{ country.flag_url }}" alt="{{ country.name }} flag" style="width: 40px; height: auto;" title="{{ country.name }}">
+                                        {% elif country.flag_emoji %}
                                             <span style="font-size: 1.5em;" title="{{ country.name }}">{{ country.flag_emoji }}</span>
                                         {% endif %}
                                     </td>
@@ -152,7 +154,9 @@
                             <div class="card h-100">
                                 <div class="card-header bg-dark d-flex justify-content-between align-items-center">
                                     <h5 class="card-title mb-0">{{ country.name }}</h5>
-                                    {% if country.flag_emoji %}
+                                    {% if country.flag_url %}
+                                    <img src="{{ country.flag_url }}" alt="{{ country.name }} flag" style="width: 30px; height: auto;" title="{{ country.name }}">
+                                    {% elif country.flag_emoji %}
                                     <span style="font-size: 1.5em;">{{ country.flag_emoji }}</span>
                                     {% endif %}
                                 </div>
