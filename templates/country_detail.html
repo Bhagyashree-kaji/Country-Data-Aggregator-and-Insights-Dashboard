@@ -1,0 +1,390 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ country.name }} - Country Data Aggregator{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('views.index') }}">Dashboard</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('views.country_list') }}">Countries</a></li>
+                {% if country.region %}
+                <li class="breadcrumb-item"><a href="{{ url_for('views.country_list', region=country.region) }}">{{ country.region }}</a></li>
+                {% endif %}
+                <li class="breadcrumb-item active">{{ country.name }}</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+{% if error %}
+<div class="alert alert-danger">
+    <h4 class="alert-heading">Error!</h4>
+    <p>{{ error }}</p>
+</div>
+{% else %}
+
+<div class="row">
+    <!-- Country Header -->
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    {% if country.flag_emoji %}
+                    <div class="me-3">
+                        <span style="font-size: 3em;">{{ country.flag_emoji }}</span>
+                    </div>
+                    {% endif %}
+                    <div>
+                        <h1 class="display-5 mb-0">{{ country.name }}</h1>
+                        {% if country.official_name and country.official_name != country.name %}
+                        <p class="text-muted">{{ country.official_name }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Country Info -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Country Information</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span><i class="fas fa-city me-2"></i> Capital:</span>
+                        <span class="fw-bold">{{ country.capital or 'N/A' }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span><i class="fas fa-globe-americas me-2"></i> Region:</span>
+                        <span class="fw-bold">{{ country.region or 'N/A' }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span><i class="fas fa-map me-2"></i> Subregion:</span>
+                        <span class="fw-bold">{{ country.subregion or 'N/A' }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span><i class="fas fa-users me-2"></i> Population:</span>
+                        <span class="fw-bold">{{ "{:,}".format(country.population) }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span><i class="fas fa-map-marked-alt me-2"></i> Area:</span>
+                        <span class="fw-bold">{{ "{:,}".format(country.area|int) if country.area else 'N/A' }} km²</span>
+                    </li>
+                    {% if country.area and country.population %}
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span><i class="fas fa-people-arrows me-2"></i> Population Density:</span>
+                        <span class="fw-bold">{{ "{:.2f}".format(country.population / country.area) }} people/km²</span>
+                    </li>
+                    {% endif %}
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span><i class="fas fa-passport me-2"></i> Country Code:</span>
+                        <span class="fw-bold">{{ country.country_code or 'N/A' }}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Additional Info -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Additional Information</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span><i class="fas fa-coins me-2"></i> Currencies:</span>
+                        <span class="fw-bold">{{ country.currencies or 'N/A' }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span><i class="fas fa-language me-2"></i> Languages:</span>
+                        <span class="fw-bold">{{ country.languages or 'N/A' }}</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span><i class="fas fa-flag me-2"></i> Independent:</span>
+                        <span class="fw-bold">
+                            {% if country.independent %}
+                            <span class="badge bg-success">Yes</span>
+                            {% else %}
+                            <span class="badge bg-secondary">No</span>
+                            {% endif %}
+                        </span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span><i class="fas fa-globe me-2"></i> UN Member:</span>
+                        <span class="fw-bold">
+                            {% if country.un_member %}
+                            <span class="badge bg-primary">Yes</span>
+                            {% else %}
+                            <span class="badge bg-secondary">No</span>
+                            {% endif %}
+                        </span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span><i class="fas fa-clock me-2"></i> Last Updated:</span>
+                        <span class="fw-bold">{{ country.last_updated.strftime('%Y-%m-%d %H:%M:%S') }}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Population and Area Comparison -->
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Comparison with Regional Average</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-4 mb-md-0">
+                        <h6 class="text-center">Population Comparison</h6>
+                        <canvas id="populationComparisonChart" height="300"></canvas>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-center">Area Comparison</h6>
+                        <canvas id="areaComparisonChart" height="300"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Similar Countries -->
+<div class="row">
+    <div class="col-md-12 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Similar Countries in {{ country.region }}</h5>
+            </div>
+            <div class="card-body">
+                <div id="similar-countries-container" class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+                    <div class="col-12 text-center">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2">Loading similar countries...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/country_detail.js') }}"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const countryName = "{{ country.name }}";
+        const countryRegion = "{{ country.region }}";
+        const countryPopulation = {{ country.population or 0 }};
+        const countryArea = {{ country.area or 0 }};
+        
+        // Load regional averages and similar countries
+        loadRegionalData(countryName, countryRegion, countryPopulation, countryArea);
+    });
+    
+    function loadRegionalData(countryName, region, countryPopulation, countryArea) {
+        // Fetch countries in the same region
+        fetch(`/api/countries?region=${encodeURIComponent(region)}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const countries = data.data;
+                    
+                    // Calculate regional averages
+                    let totalPopulation = 0;
+                    let totalArea = 0;
+                    let countWithPopulation = 0;
+                    let countWithArea = 0;
+                    
+                    countries.forEach(country => {
+                        if (country.population) {
+                            totalPopulation += country.population;
+                            countWithPopulation++;
+                        }
+                        if (country.area) {
+                            totalArea += country.area;
+                            countWithArea++;
+                        }
+                    });
+                    
+                    const avgPopulation = countWithPopulation > 0 ? totalPopulation / countWithPopulation : 0;
+                    const avgArea = countWithArea > 0 ? totalArea / countWithArea : 0;
+                    
+                    // Create population comparison chart
+                    createComparisonChart(
+                        'populationComparisonChart', 
+                        countryName, 
+                        countryPopulation, 
+                        avgPopulation,
+                        'Population',
+                        ['#6610f2', '#3b9ae8']
+                    );
+                    
+                    // Create area comparison chart
+                    createComparisonChart(
+                        'areaComparisonChart', 
+                        countryName, 
+                        countryArea, 
+                        avgArea,
+                        'Area (km²)',
+                        ['#fd7e14', '#ffc107']
+                    );
+                    
+                    // Find similar countries (similar population or area)
+                    const similarCountries = findSimilarCountries(countries, countryName, countryPopulation, countryArea);
+                    displaySimilarCountries(similarCountries);
+                }
+            })
+            .catch(error => {
+                console.error('Error loading regional data:', error);
+            });
+    }
+    
+    function createComparisonChart(chartId, countryName, countryValue, averageValue, label, colors) {
+        const ctx = document.getElementById(chartId).getContext('2d');
+        
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: [countryName, `Average in Region`],
+                datasets: [{
+                    label: label,
+                    data: [countryValue, averageValue],
+                    backgroundColor: colors,
+                    borderColor: colors,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                if (value >= 1000000) {
+                                    return (value / 1000000).toFixed(1) + 'M';
+                                } else if (value >= 1000) {
+                                    return (value / 1000).toFixed(1) + 'K';
+                                }
+                                return value;
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let value = context.raw;
+                                if (value >= 1000000) {
+                                    return label + ': ' + (value / 1000000).toFixed(2) + ' million';
+                                } else if (value >= 1000) {
+                                    return label + ': ' + (value / 1000).toFixed(2) + ' thousand';
+                                }
+                                return label + ': ' + value;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+    
+    function findSimilarCountries(countries, countryName, population, area) {
+        // Filter out the current country
+        const otherCountries = countries.filter(country => country.name !== countryName);
+        
+        // Calculate similarity score based on population and area (if available)
+        otherCountries.forEach(country => {
+            let similarityScore = 0;
+            
+            if (population > 0 && country.population > 0) {
+                const populationRatio = Math.min(population, country.population) / Math.max(population, country.population);
+                similarityScore += populationRatio;
+            }
+            
+            if (area > 0 && country.area > 0) {
+                const areaRatio = Math.min(area, country.area) / Math.max(area, country.area);
+                similarityScore += areaRatio;
+            }
+            
+            // Adjust based on available metrics
+            if (population > 0 && country.population > 0 && area > 0 && country.area > 0) {
+                similarityScore /= 2; // Average if both metrics are available
+            }
+            
+            country.similarityScore = similarityScore;
+        });
+        
+        // Sort by similarity score and take top 4
+        return otherCountries
+            .sort((a, b) => b.similarityScore - a.similarityScore)
+            .slice(0, 4);
+    }
+    
+    function displaySimilarCountries(similarCountries) {
+        const container = document.getElementById('similar-countries-container');
+        
+        if (!similarCountries || similarCountries.length === 0) {
+            container.innerHTML = `
+                <div class="col-12">
+                    <div class="alert alert-info mb-0">
+                        No similar countries found in this region.
+                    </div>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = '';
+        
+        similarCountries.forEach(country => {
+            const card = document.createElement('div');
+            card.className = 'col';
+            card.innerHTML = `
+                <div class="card h-100">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="card-title mb-0">${country.name}</h6>
+                        <span style="font-size: 1.5em;">${country.flag_emoji || ''}</span>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span><i class="fas fa-users me-2"></i> Population:</span>
+                                <span class="fw-bold">${country.population.toLocaleString()}</span>
+                            </li>
+                            <li class="list-group-item d-flex justify-content-between">
+                                <span><i class="fas fa-map me-2"></i> Area:</span>
+                                <span class="fw-bold">${country.area ? country.area.toLocaleString() + ' km²' : 'N/A'}</span>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="card-footer">
+                        <a href="/countries/${encodeURIComponent(country.name)}" class="btn btn-outline-info btn-sm w-100">
+                            <i class="fas fa-info-circle me-1"></i> View Details
+                        </a>
+                    </div>
+                </div>
+            `;
+            
+            container.appendChild(card);
+        });
+    }
+</script>
+{% endblock %}

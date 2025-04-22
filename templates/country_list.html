@@ -1,0 +1,235 @@
+{% extends 'base.html' %}
+
+{% block title %}Countries - Country Data Aggregator{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="display-5">
+            {% if current_region %}
+            Countries in {{ current_region }}
+            {% else %}
+            All Countries
+            {% endif %}
+        </h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('views.index') }}">Dashboard</a></li>
+                <li class="breadcrumb-item active">Countries</li>
+                {% if current_region %}
+                <li class="breadcrumb-item active">{{ current_region }}</li>
+                {% endif %}
+            </ol>
+        </nav>
+    </div>
+</div>
+
+{% if error %}
+<div class="alert alert-danger">
+    <h4 class="alert-heading">Error!</h4>
+    <p>{{ error }}</p>
+</div>
+{% else %}
+
+<!-- Filters -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Filters</h5>
+            </div>
+            <div class="card-body">
+                <form method="get" action="{{ url_for('views.country_list') }}">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="region" class="form-label">Region</label>
+                                <select class="form-select" id="region" name="region">
+                                    <option value="">All Regions</option>
+                                    {% for region in regions %}
+                                    <option value="{{ region }}" {% if current_region == region %}selected{% endif %}>{{ region }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="sort" class="form-label">Sort By</label>
+                                <select class="form-select" id="sort" name="sort">
+                                    <option value="name" {% if current_sort == 'name' %}selected{% endif %}>Name</option>
+                                    <option value="population" {% if current_sort == 'population' %}selected{% endif %}>Population</option>
+                                    <option value="area" {% if current_sort == 'area' %}selected{% endif %}>Area</option>
+                                    <option value="region" {% if current_sort == 'region' %}selected{% endif %}>Region</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="order" class="form-label">Order</label>
+                                <select class="form-select" id="order" name="order">
+                                    <option value="asc" {% if current_order == 'asc' %}selected{% endif %}>Ascending</option>
+                                    <option value="desc" {% if current_order == 'desc' %}selected{% endif %}>Descending</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-filter me-1"></i> Apply Filters
+                        </button>
+                        <a href="{{ url_for('views.country_list') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times me-1"></i> Clear Filters
+                        </a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Country Table -->
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="card-title mb-0">Countries ({{ countries|length }})</h5>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="card-view-toggle">
+                    <label class="form-check-label" for="card-view-toggle">Card View</label>
+                </div>
+            </div>
+            <div class="card-body">
+                {% if countries %}
+                <!-- Table View -->
+                <div id="table-view">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Flag</th>
+                                    <th>Name</th>
+                                    <th>Capital</th>
+                                    <th>Region</th>
+                                    <th>Population</th>
+                                    <th>Area (km²)</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for country in countries %}
+                                <tr>
+                                    <td>
+                                        {% if country.flag_emoji %}
+                                            <span style="font-size: 1.5em;" title="{{ country.name }}">{{ country.flag_emoji }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ country.name }}</td>
+                                    <td>{{ country.capital or 'N/A' }}</td>
+                                    <td>
+                                        <a href="{{ url_for('views.country_list', region=country.region) }}" class="badge bg-primary text-decoration-none">
+                                            {{ country.region or 'N/A' }}
+                                        </a>
+                                    </td>
+                                    <td>{{ "{:,}".format(country.population) }}</td>
+                                    <td>{{ "{:,}".format(country.area|int) if country.area else 'N/A' }}</td>
+                                    <td>
+                                        <a href="{{ url_for('views.country_detail', name=country.name) }}" class="btn btn-sm btn-outline-info">
+                                            <i class="fas fa-info-circle"></i> Details
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                
+                <!-- Card View -->
+                <div id="card-view" class="d-none">
+                    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                        {% for country in countries %}
+                        <div class="col">
+                            <div class="card h-100">
+                                <div class="card-header bg-dark d-flex justify-content-between align-items-center">
+                                    <h5 class="card-title mb-0">{{ country.name }}</h5>
+                                    {% if country.flag_emoji %}
+                                    <span style="font-size: 1.5em;">{{ country.flag_emoji }}</span>
+                                    {% endif %}
+                                </div>
+                                <div class="card-body">
+                                    <ul class="list-group list-group-flush">
+                                        <li class="list-group-item d-flex justify-content-between">
+                                            <span><i class="fas fa-city me-2"></i> Capital:</span>
+                                            <span class="fw-bold">{{ country.capital or 'N/A' }}</span>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between">
+                                            <span><i class="fas fa-globe-americas me-2"></i> Region:</span>
+                                            <span class="fw-bold">{{ country.region or 'N/A' }}</span>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between">
+                                            <span><i class="fas fa-users me-2"></i> Population:</span>
+                                            <span class="fw-bold">{{ "{:,}".format(country.population) }}</span>
+                                        </li>
+                                        <li class="list-group-item d-flex justify-content-between">
+                                            <span><i class="fas fa-map me-2"></i> Area:</span>
+                                            <span class="fw-bold">{{ "{:,}".format(country.area|int) if country.area else 'N/A' }} km²</span>
+                                        </li>
+                                    </ul>
+                                </div>
+                                <div class="card-footer">
+                                    <a href="{{ url_for('views.country_detail', name=country.name) }}" class="btn btn-outline-info w-100">
+                                        <i class="fas fa-info-circle me-1"></i> View Details
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <h4 class="alert-heading">No countries found!</h4>
+                    <p>There are no countries matching your current filters.</p>
+                    <hr>
+                    <p class="mb-0">Try adjusting your filters or <a href="{{ url_for('views.country_list') }}" class="alert-link">view all countries</a>.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Toggle between table and card view
+        const tableView = document.getElementById('table-view');
+        const cardView = document.getElementById('card-view');
+        const viewToggle = document.getElementById('card-view-toggle');
+        
+        if (viewToggle && tableView && cardView) {
+            viewToggle.addEventListener('change', function() {
+                if (this.checked) {
+                    tableView.classList.add('d-none');
+                    cardView.classList.remove('d-none');
+                    localStorage.setItem('countryViewPreference', 'card');
+                } else {
+                    tableView.classList.remove('d-none');
+                    cardView.classList.add('d-none');
+                    localStorage.setItem('countryViewPreference', 'table');
+                }
+            });
+            
+            // Check for saved preference
+            const savedPreference = localStorage.getItem('countryViewPreference');
+            if (savedPreference === 'card') {
+                viewToggle.checked = true;
+                tableView.classList.add('d-none');
+                cardView.classList.remove('d-none');
+            }
+        }
+    });
+</script>
+{% endblock %}

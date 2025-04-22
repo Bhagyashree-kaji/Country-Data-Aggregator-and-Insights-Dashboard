@@ -1,0 +1,257 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - Country Data Aggregator{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col">
+        <h1 class="display-5">Country Data Dashboard</h1>
+        <p class="lead">Explore comprehensive data about countries around the world.</p>
+    </div>
+</div>
+
+{% if error %}
+<div class="alert alert-danger">
+    <h4 class="alert-heading">Error!</h4>
+    <p>{{ error }}</p>
+</div>
+{% endif %}
+
+{% if initial_load %}
+<div class="alert alert-info">
+    <h4 class="alert-heading">Welcome to the Country Data Aggregator!</h4>
+    <p>It looks like this is your first time here. You need to load country data from the REST Countries API before you can use the dashboard.</p>
+    <hr>
+    <p class="mb-0">Click the "Load Initial Data" button below to fetch country data.</p>
+</div>
+
+<div class="text-center my-5">
+    <button id="load-initial-data" class="btn btn-primary btn-lg">
+        <i class="fas fa-download me-2"></i> Load Initial Data
+    </button>
+</div>
+{% else %}
+<!-- Stats Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card text-bg-primary mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Total Countries</h5>
+                <p class="card-text display-6" id="total-countries-stat">{{ total_countries }}</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-bg-success mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Total Population</h5>
+                <p class="card-text display-6" id="total-population-stat">Loading...</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-bg-info mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Avg. Population</h5>
+                <p class="card-text display-6" id="avg-population-stat">Loading...</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card text-bg-warning mb-3">
+            <div class="card-body">
+                <h5 class="card-title">Total Regions</h5>
+                <p class="card-text display-6" id="total-regions-stat">{{ regions|length }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Charts -->
+<div class="row">
+    <!-- Region Distribution Chart -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Countries by Region</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="regionChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Population Distribution Chart -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Top 10 Countries by Population</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="populationChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- More Charts -->
+<div class="row">
+    <!-- Area Distribution Chart -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Top 10 Countries by Area</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="areaChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Population Density Chart -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Top 10 Countries by Population Density</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="densityChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Access -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Quick Access</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Explore by Region</h6>
+                        <div class="list-group" id="region-list">
+                            {% for region in regions %}
+                            <a href="{{ url_for('views.country_list', region=region) }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                                {{ region }}
+                                <span class="badge bg-primary rounded-pill" id="region-count-{{ region|replace(' ', '-')|lower }}">Loading...</span>
+                            </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>View Countries</h6>
+                        <div class="d-grid gap-2">
+                            <a href="{{ url_for('views.country_list') }}" class="btn btn-outline-primary">
+                                <i class="fas fa-list me-1"></i> View All Countries
+                            </a>
+                            <a href="{{ url_for('views.country_list', sort='population', order='desc') }}" class="btn btn-outline-success">
+                                <i class="fas fa-sort-amount-down me-1"></i> Sort by Population
+                            </a>
+                            <a href="{{ url_for('views.country_list', sort='area', order='desc') }}" class="btn btn-outline-info">
+                                <i class="fas fa-sort-amount-down me-1"></i> Sort by Area
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+
+{% if initial_load %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const loadInitialBtn = document.getElementById('load-initial-data');
+        const loadingIndicator = document.getElementById('loading-indicator');
+        
+        loadInitialBtn.addEventListener('click', function() {
+            // Show loading indicator
+            loadingIndicator.classList.remove('d-none');
+            
+            // Disable button
+            loadInitialBtn.disabled = true;
+            loadInitialBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i> Loading Data...';
+            
+            // Call API to refresh data
+            fetch('/api/refresh', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Hide loading indicator
+                loadingIndicator.classList.add('d-none');
+                
+                if (data.success) {
+                    // Show success message
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'alert alert-success';
+                    alertDiv.innerHTML = `
+                        <h4 class="alert-heading">Success!</h4>
+                        <p>${data.message}</p>
+                        <hr>
+                        <p class="mb-0">Reloading page to show dashboard...</p>
+                    `;
+                    
+                    // Replace the initial load content with success message
+                    document.querySelector('.container').innerHTML = '';
+                    document.querySelector('.container').appendChild(alertDiv);
+                    
+                    // Reload page after successful refresh
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                } else {
+                    // Re-enable button
+                    loadInitialBtn.disabled = false;
+                    loadInitialBtn.innerHTML = '<i class="fas fa-download me-2"></i> Load Initial Data';
+                    
+                    // Show error message
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'alert alert-danger';
+                    alertDiv.innerHTML = `
+                        <h4 class="alert-heading">Error!</h4>
+                        <p>There was an error loading initial data: ${data.message}</p>
+                        <hr>
+                        <p class="mb-0">Please try again.</p>
+                    `;
+                    
+                    document.querySelector('.container').prepend(alertDiv);
+                }
+            })
+            .catch(error => {
+                // Hide loading indicator
+                loadingIndicator.classList.add('d-none');
+                
+                // Re-enable button
+                loadInitialBtn.disabled = false;
+                loadInitialBtn.innerHTML = '<i class="fas fa-download me-2"></i> Load Initial Data';
+                
+                // Show error message
+                const alertDiv = document.createElement('div');
+                alertDiv.className = 'alert alert-danger';
+                alertDiv.innerHTML = `
+                    <h4 class="alert-heading">Error!</h4>
+                    <p>There was an error loading initial data: ${error.message}</p>
+                    <hr>
+                    <p class="mb-0">Please try again.</p>
+                `;
+                
+                document.querySelector('.container').prepend(alertDiv);
+            });
+        });
+    });
+</script>
+{% endif %}
+{% endblock %}
