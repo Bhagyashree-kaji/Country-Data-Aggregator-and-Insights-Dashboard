@@ -1,0 +1,55 @@
+Country Data Aggregator and Insights Dashboard 
+Overview: 
+The intern will develop a web service that: 
+● Retrieves comprehensive country data from the REST Countries API. 
+● Processes and cleans the data (extracts key fields such as name, capital, region, 
+population, and area). 
+● Persists the cleaned data in a local SQL database. 
+● Exposes RESTful endpoints to allow users to query the aggregated data. 
+● Provides a foundation for further analysis and visualization of country statistics. 
+Weekly Task Breakdown 
+© 2023 - Rubixe. All rights Reserved | www.rubixe.com 
+Country Data Aggregator 
+and Insights Dashboard  
+Week 1: Project Inception & API Integration 
+● Objective: Establish the project foundation and integrate the REST Countries API. 
+● Setup: Initialize the project repository, set up a virtual environment, and install 
+dependencies (Flask, SQLAlchemy, requests). 
+● API Research & Integration: Study REST Countries API documentation and 
+implement functions to fetch country data. 
+Week 2: Data Processing & Persistence 
+● Objective: Process retrieved data and store it in a structured database. 
+● Data Processing: Extract and clean key fields (name, capital, region, population, area) 
+from API responses. 
+● Database Setup: Design and implement an SQL database schema (using SQLite for 
+simplicity). 
+● Data Persistence: Write functions to insert processed data into the database with error 
+handling. 
+Week 3: RESTful API Development & Testing 
+●  Objective: Develop API endpoints to expose stored country data and ensure reliability. 
+● API Development: Build Flask-based RESTful endpoints: 
+○ /countries → Retrieve all countries 
+○ /countries/<name> → Fetch details of a specific country 
+● Unit Testing: Write test cases for data processing and API responses. 
+● Error Handling & Logging: Implement structured logging and exception handling for 
+robustness. 
+Week 4: Integration, Documentation & Deployment 
+● Objective: Ensure smooth integration, document the system, and deploy the application. 
+© 2023 - Rubixe. All rights Reserved | www.rubixe.com 
+Country Data Aggregator 
+and Insights Dashboard  
+● Integration Testing: Perform end-to-end validation of data flow from API fetching to 
+database storage and retrieval. 
+● Documentation: Prepare a README, API usage guide, and code comments for 
+maintainability. 
+● Deployment: Package the application (e.g., using Docker) and deploy on a cloud/server. 
+Conduct final project review and optimizations. 
+Expected Content for Final Submission: 
+● Source Code – Python-based Flask API with SQL database, unit tests, error handling, and 
+logging. 
+● Deployment – Dockerized or at least deployable application with cloud/server deployment, 
+required configuration, and execution guide. 
+● Documentation – User guide, README, API docs, database schema, and error-handling 
+guide. 
+● Presentation & Reports – Final report, live demo, insights, and scalability considerations. 
+© 2023 - Rubixe. All rights Reserved | www.rubixe.com
